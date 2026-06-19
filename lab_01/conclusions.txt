@@ -1,0 +1,111 @@
+INFORMATION RETRIEVAL ASSIGNMENT - CONCLUSIONS
+==============================================
+
+Dataset: BEIR nfcorpus/test
+- 3,633 documents
+- 323 queries with relevance judgments
+- Graded relevance: 0-2
+
+
+1. RANKER COMPARISON
+--------------------
+
+Four rankers were evaluated on nDCG@10, MAP, and MRR:
+
+Ranker          nDCG@10    MAP        MRR
+Boolean-OR      0.1429     0.0864     0.2266
+TF-IDF          0.1932     0.1007     0.3391
+BM25            0.2913     0.1392     0.5025
+RRF Fusion      0.2402     0.1174     0.4112
+
+Key findings:
+- BM25 significantly outperforms all other rankers
+- BM25 achieves 51% better nDCG@10 than TF-IDF (0.2913 vs 0.1932)
+- RRF Fusion improves over TF-IDF but not over BM25 alone
+- Boolean-OR baseline shows the value of proper ranking algorithms
+
+
+2. BM25 PARAMETER SWEEP
+-----------------------
+
+Parameters tested:
+- k1 (saturation): {0.5, 1.0, 1.2, 1.5, 2.0, 3.0}
+- b (length normalization): {0, 0.25, 0.5, 0.75, 1.0}
+
+k1 results (b=0.75):
+k1=0.5:  0.2870
+k1=1.0:  0.2901
+k1=1.2:  0.2905
+k1=1.5:  0.2913
+k1=2.0:  0.2919  (best in sweep)
+k1=3.0:  0.2904
+
+b results (k1=1.5):
+b=0:     0.2871
+b=0.25:  0.2930  (best overall)
+b=0.5:   0.2909
+b=0.75:  0.2913
+b=1.0:   0.2882
+
+Best parameters found: k1=1.5, b=0.25 with nDCG@10=0.2930
+
+Interpretation:
+- k1 controls term frequency saturation; moderate values (1.5-2.0) work best
+- b controls length normalization; partial normalization (b=0.25) is optimal
+- Extreme values (b=0 or b=1) hurt performance
+
+
+3. TOKENIZATION STUDY
+---------------------
+
+Three tokenization pipelines compared:
+
+Tokenizer    Vocab Size  nDCG@10    MAP        MRR
+basic        35,840      0.2913     0.1392     0.5025
+stopwords    35,816      0.2914     0.1384     0.5040
+stemming     31,251      0.3086     0.1443     0.5203
+
+Key findings:
+- Stemming provides the best performance (6% improvement over basic)
+- Stopword removal has minimal impact (vocabulary reduced by only 24 terms)
+- Stemming reduces vocabulary by 13% (4,589 terms) through conflation
+- Conflation helps by matching morphological variants (e.g., "treatment" and "treatments")
+
+
+4. STATISTICAL SIGNIFICANCE
+---------------------------
+
+Comparing BM25 vs TF-IDF on nDCG@10:
+- Mean difference: 0.0981
+- 95% CI: [0.0789, 0.1172]
+
+Paired t-test:
+- t-statistic: 10.03
+- p-value: < 0.0001
+- Significant at alpha=0.05: YES
+
+Wilcoxon signed-rank test:
+- statistic: 1685.5
+- p-value: < 0.0001
+- Significant at alpha=0.05: YES
+
+Conclusion: The improvement of BM25 over TF-IDF is statistically significant with high confidence (n=323 queries).
+
+
+5. OVERALL CONCLUSIONS
+----------------------
+
+BM25 vs TF-IDF:
+BM25's term frequency saturation and document length normalization provide substantial improvements over TF-IDF. The saturation effect (k1) prevents long documents from dominating due to high term frequency, while length normalization (b) adjusts for document length bias.
+
+Parameter Sensitivity:
+BM25 is relatively robust to parameter choices around the default (k1=1.5, b=0.75), but tuning can provide small gains. The best found parameters (k1=1.5, b=0.25) suggest that less aggressive length normalization works better for this corpus.
+
+Tokenization Impact:
+Stemming is the most effective preprocessing step, improving all metrics by conflating morphological variants. Stopword removal has minimal effect, likely because common words in medical queries carry meaning.
+
+Fusion:
+RRF Fusion of BM25 and TF-IDF performs between the two individual rankers, suggesting that the rankers are correlated and simple fusion does not provide complementary benefits in this case.
+
+Statistical Rigor:
+The improvements observed are statistically significant (p < 0.0001), confirming that BM25's advantages are not due to chance.

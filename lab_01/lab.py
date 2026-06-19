@@ -1,41 +1,15 @@
 import math
 import re  # for tokenization
-import json
 from collections import defaultdict
+import ir_datasets
 
-# Load data
-def load_corpus(path):
-    corpus = {}
-    with open(path, 'r', encoding='utf-8') as f:
-        for line in f:
-            doc = json.loads(line.strip())
-            corpus[doc['_id']] = {
-                'title': doc.get('title', ''),
-                'text': doc.get('text', '')
-            }
-    return corpus
-
-def load_queries(path):
-    queries = []
-    with open(path, 'r', encoding='utf-8') as f:
-        for line in f:
-            q = json.loads(line.strip())
-            queries.append({
-                '_id': q['_id'],
-                'text': q.get('text', '')
-            })
-    return queries
-
-def load_qrels(path):
-    qrels = defaultdict(dict)
-    with open(path, 'r', encoding='utf-8') as f:
-        next(f)
-        for line in f:
-            parts = line.strip().split('\t')
-            if len(parts) >= 3:
-                query_id, doc_id, score = parts[0], parts[1], int(parts[2])
-                qrels[query_id][doc_id] = score
-    return qrels
+# Load data from BEIR nfcorpus/test
+ds = ir_datasets.load("beir/nfcorpus/test")
+docs = {d.doc_id: d.text for d in ds.docs_iter()}
+queries = {q.query_id: q.text for q in ds.queries_iter()}
+qrels = {}
+for qr in ds.qrels_iter():
+    qrels.setdefault(qr.query_id, {})[qr.doc_id] = qr.relevance
 
 def tokenize(text):
     lowercased = text.lower()
@@ -48,11 +22,9 @@ def build_inverted_index(corpus):
     doc_term_freqs = {}  # doc_id -> {term: tf}
     doc_lengths = {}
     
-    # compute tf for each document
-    for doc_id, doc in corpus.items():
-        full_text = doc['title'] + ' ' + doc['text']
-        tokens = tokenize(full_text)
-        
+    # Compute tf for each document
+    for doc_id, text in corpus.items():
+        tokens = tokenize(text)
         doc_lengths[doc_id] = len(tokens)
         
         # Count tf in the document
@@ -70,7 +42,7 @@ def build_inverted_index(corpus):
     N = len(corpus)
     avgdl = sum(doc_lengths.values()) / N if N > 0 else 0
     
-    return dict(index), doc_lengths, avgdl, N
+    return dict(index), doc_term_freqs, doc_lengths, avgdl, N
 
 def compute_df(index, term):
     if term in index:
@@ -95,22 +67,12 @@ def compute_tf_idf_score(query_tokens, doc_id, index, doc_term_freqs, N):
         df = compute_df(index, term)
         idf = compute_idf(N, df)
         
-        # TF-IDF weight
+        # TF-IDF weight: tf * idf
         weight = tf * idf
         score += weight
     return score
 
-def rank_documents_tfidf(query_tokens, corpus, index, N):
-    # Pre-compute tf for each document
-    doc_term_freqs = {}
-    for doc_id in corpus:
-        full_text = corpus[doc_id]['title'] + ' ' + corpus[doc_id]['text']
-        tokens = tokenize(full_text)
-        term_freqs = defaultdict(int)
-        for token in tokens:
-            term_freqs[token] += 1
-        doc_term_freqs[doc_id] = term_freqs
-    
+def rank_documents_tfidf(query_tokens, corpus, index, doc_term_freqs, N):
     scores = []
     for doc_id in corpus:
         score = compute_tf_idf_score(query_tokens, doc_id, index, doc_term_freqs, N)
@@ -124,36 +86,29 @@ def compute_bm25_idf(N, df):
         return 0
     return math.log(1 + (N - df + 0.5) / (df + 0.5))
 
-def compute_bm25_score(query_tokens, doc_id, index, doc_lengths, avgdl, N, k1=1.5, b=0.75):
+def compute_bm25_score(query_tokens, doc_id, index, doc_term_freqs, doc_lengths, avgdl, N, k1=1.5, b=0.75):
     score = 0.0
     doc_len = doc_lengths.get(doc_id, 0)
     
-    # Get tf for this document from index
-    doc_term_freqs = {}
     for term in query_tokens:
-        if term in index:
-            for d_id, tf in index[term]:
-                if d_id == doc_id:
-                    doc_term_freqs[term] = tf
-                    break
-    
-    for term in query_tokens:
-        f = doc_term_freqs.get(term, 0)
-        if f == 0:
+        tf = doc_term_freqs.get(doc_id, {}).get(term, 0)
+        if tf == 0:
             continue
         
         # Compute BM25 IDF
         df = compute_df(index, term)
         idf = compute_bm25_idf(N, df)
         
-        B = ((k1 + 1) * f) / (k1 * ((1 - b) + b * (doc_len / avgdl)) + f)
+        # BM25 term weight with saturation and length normalization
+        denominator = k1 * ((1 - b) + b * (doc_len / avgdl)) + tf
+        B = ((k1 + 1) * tf) / denominator
         score += idf * B
     return score
 
-def rank_documents_bm25(query_tokens, corpus, index, doc_lengths, avgdl, N, k1=1.5, b=0.75):
+def rank_documents_bm25(query_tokens, corpus, index, doc_term_freqs, doc_lengths, avgdl, N, k1=1.5, b=0.75):
     scores = []
     for doc_id in corpus:
-        score = compute_bm25_score(query_tokens, doc_id, index, doc_lengths, avgdl, N, k1, b)
+        score = compute_bm25_score(query_tokens, doc_id, index, doc_term_freqs, doc_lengths, avgdl, N, k1, b)
         scores.append((doc_id, score))
     
     scores.sort(key=lambda x: x[1], reverse=True)
@@ -176,8 +131,8 @@ def compute_ndcg_at_k(retrieved_docs, qrels_for_query, k=10):
     
     # Compute DCG
     dcg = compute_dcg(relevances)
-    # Compute ideal DCG (IDCG)
-    # Sort all relevant documents by relevance
+    
+    # Compute ideal DCG (IDCG) - sort all relevant documents by relevance
     all_relevances = sorted(qrels_for_query.values(), reverse=True)
     ideal_relevances = all_relevances[:k]
     idcg = compute_dcg(ideal_relevances)
@@ -186,50 +141,136 @@ def compute_ndcg_at_k(retrieved_docs, qrels_for_query, k=10):
         return 0.0
     return dcg / idcg
 
+def print_comparison_table(tfidf_ndcg_scores, bm25_ndcg_scores):
+    print("nDCG@10 COMPARISON: TF-IDF vs BM25")
+    print(f"{'Query ID':<12} {'TF-IDF':>10} {'BM25':>10} {'Diff':>10}")
+    print("-"*60)
+    
+    tfidf_dict = dict(tfidf_ndcg_scores)
+    bm25_dict = dict(bm25_ndcg_scores)
+    
+    for query_id in sorted(tfidf_dict.keys()):
+        t_score = tfidf_dict[query_id]
+        b_score = bm25_dict[query_id]
+        diff = b_score - t_score
+        print(f"{query_id:<12} {t_score:>10.4f} {b_score:>10.4f} {diff:>+10.4f}")
+    
+    print("-"*60)
+    mean_tfidf = sum(tfidf_dict.values()) / len(tfidf_dict)
+    mean_bm25 = sum(bm25_dict.values()) / len(bm25_dict)
+    mean_diff = mean_bm25 - mean_tfidf
+    print(f"{'MEAN':<12} {mean_tfidf:>10.4f} {mean_bm25:>10.4f} {mean_diff:>+10.4f}")
+
+def print_divergent_query(query_id, query_text, tfidf_top10, bm25_top10, qrels_for_query, corpus, index, doc_term_freqs, doc_lengths, avgdl, N):
+    print(f"DIVERGENT QUERY EXAMPLE: {query_id}")
+    print(f"Query text: '{query_text}'")
+    print(f"Query tokens: {tokenize(query_text)}")
+    print(f"Corpus stats: N={N}, avgdl={avgdl:.2f}")
+    print()
+    
+    tfidf_ids = [doc_id for doc_id, _ in tfidf_top10]
+    bm25_ids = [doc_id for doc_id, _ in bm25_top10]
+    
+    print(f"{'Rank':<6} {'TF-IDF Doc':<15} {'Rel':>4} {'Score':>10} {'BM25 Doc':<15} {'Rel':>4} {'Score':>10} {'Same?':>6}")
+    print("-"*100)
+    
+    tfidf_dict = dict(tfidf_top10)
+    bm25_dict = dict(bm25_top10)
+    
+    for i in range(10):
+        t_doc = tfidf_ids[i] if i < len(tfidf_ids) else "N/A"
+        b_doc = bm25_ids[i] if i < len(bm25_ids) else "N/A"
+        t_rel = qrels_for_query.get(t_doc, 0) if t_doc != "N/A" else 0
+        b_rel = qrels_for_query.get(b_doc, 0) if b_doc != "N/A" else 0
+        t_score = tfidf_dict.get(t_doc, 0) if t_doc != "N/A" else 0
+        b_score = bm25_dict.get(b_doc, 0) if b_doc != "N/A" else 0
+        same = "+" if t_doc == b_doc else "-"
+        print(f"{i+1:<6} {t_doc:<15} {t_rel:>4} {t_score:>10.4f} {b_doc:<15} {b_rel:>4} {b_score:>10.4f} {same:>6}")
+    
+    # Show documents that appear in one ranking but not the other
+    tfidf_set = set(tfidf_ids)
+    bm25_set = set(bm25_ids)
+    
+    only_in_tfidf = tfidf_set - bm25_set
+    only_in_bm25 = bm25_set - tfidf_set
+    
+    if only_in_tfidf:
+        print(f"\nDocuments only in TF-IDF top-10: {', '.join(only_in_tfidf)}")
+    if only_in_bm25:
+        print(f"Documents only in BM25 top-10: {', '.join(only_in_bm25)}")
+    
+    query_tokens = tokenize(query_text)
+    
+    all_diff_docs = only_in_tfidf | only_in_bm25
+    for doc_id in all_diff_docs:
+        print(f"\n--- Document: {doc_id} ---")
+        print(f"  Relevance: {qrels_for_query.get(doc_id, 0)}")
+        print(f"  Document length: {doc_lengths.get(doc_id, 0)} tokens")
+        print(f"  Length vs avgdl: {doc_lengths.get(doc_id, 0) / avgdl:.3f}x")
+        
+        print(f"\n  Term frequencies in document:")
+        doc_terms = doc_term_freqs.get(doc_id, {})
+        for term in query_tokens:
+            tf = doc_terms.get(term, 0)
+            df = compute_df(index, term)
+            idf_tfidf = compute_idf(N, df)
+            idf_bm25 = compute_bm25_idf(N, df)
+            print(f"    '{term}': tf={tf}, df={df}, IDF_tfidf={idf_tfidf:.4f}, IDF_bm25={idf_bm25:.4f}")
+        
+        doc_len = doc_lengths.get(doc_id, 0)
+        
+        # Show why BM25 ranked it differently
+        if doc_id in only_in_bm25:
+            print(f"  BM25 PROMOTED this document (relevance={qrels_for_query.get(doc_id, 0)})")
+            if doc_len < avgdl:
+                print(f"      Reason: Document is shorter than average ({doc_len} < {avgdl:.0f}), boosted by length normalization")
+        elif doc_id in only_in_tfidf:
+            print(f"  TF-IDF kept this document but BM25 DEMOTED it (relevance={qrels_for_query.get(doc_id, 0)})")
+            if doc_len > avgdl:
+                print(f"      Reason: Document is longer than average ({doc_len} > {avgdl:.0f}), penalized by length normalization")
+    
+
 if __name__ == "__main__":
-    # Load data
-    corpus = load_corpus('lab_01/nfcorpus/corpus.jsonl')
-    all_queries = load_queries('lab_01/nfcorpus/queries.jsonl')
-    qrels = load_qrels('lab_01/nfcorpus/qrels/test.tsv')
     
-    print(f"  - Corpus size: {len(corpus)} documents")
-    print(f"  - Total queries: {len(all_queries)}")
-    print(f"  - Qrels entries: {len(qrels)} queries with judgments")
+    print(f"\nDataset loaded (beir/nfcorpus/test)")
+    print(f"    - Corpus size: {len(docs)} documents")
+    print(f"    - Total queries: {len(queries)}")
+    print(f"    - Queries with judgments: {len(qrels)}")
     
-    # Sort by query_id and take first 30
-    sorted_queries = sorted(all_queries, key=lambda x: x['_id'])
-    query_set = sorted_queries[:30]
-    print(f"  - Fixed query set: {len(query_set)} queries (first 30 by query_id)")
+    # Build fixed query set: first 30 by query_id
+    sorted_query_ids = sorted(queries.keys())
+    query_set_ids = sorted_query_ids[:30]
+    print(f"\nFixed set: first {len(query_set_ids)} queries sorted by query_id)")
     
-    index, doc_lengths, avgdl, N = build_inverted_index(corpus)
-    print(f"  - Vocabulary size: {len(index)} unique terms")
-    print(f"  - Average document length: {avgdl:.2f} tokens")
-    print(f"  - Total documents (N): {N}")
+    # Build inverted index
+    print("\nBuilding inverted index")
+    index, doc_term_freqs, doc_lengths, avgdl, N = build_inverted_index(docs)
+    print(f"    - Vocabulary size: {len(index)} unique terms")
+    print(f"    - Average document length: {avgdl:.2f} tokens")
     
+    # Rank documents for each query
+    print("\nRanking documents with TF-IDF and BM25")
     tfidf_results = {}  # query_id -> ranked list of (doc_id, score)
     bm25_results = {}   # query_id -> ranked list of (doc_id, score)
     
-    for query in query_set:
-        query_id = query['_id']
-        query_text = query['text']
+    for query_id in query_set_ids:
+        query_text = queries[query_id]
         query_tokens = tokenize(query_text)
         
         # TF-IDF ranking
-        tfidf_ranking = rank_documents_tfidf(query_tokens, corpus, index, N)
+        tfidf_ranking = rank_documents_tfidf(query_tokens, docs, index, doc_term_freqs, N)
         tfidf_results[query_id] = tfidf_ranking
         
         # BM25 ranking
-        bm25_ranking = rank_documents_bm25(query_tokens, corpus, index, doc_lengths, avgdl, N)
+        bm25_ranking = rank_documents_bm25(query_tokens, docs, index, doc_term_freqs, doc_lengths, avgdl, N)
         bm25_results[query_id] = bm25_ranking
     
-    print("\n[4] Computing nDCG@10...")
-    
+    # Compute nDCG@10
+    print("\nComputing nDCG@10")
     tfidf_ndcg_scores = []
     bm25_ndcg_scores = []
     
-    for query in query_set:
-        query_id = query['_id']
-        
+    for query_id in query_set_ids:
         if query_id not in qrels:
             continue
         
@@ -243,47 +284,35 @@ if __name__ == "__main__":
         bm25_ndcg = compute_ndcg_at_k(bm25_top10, qrels[query_id], k=10)
         bm25_ndcg_scores.append((query_id, bm25_ndcg))
     
-    # Compute mean nDCG@10
-    mean_tfidf_ndcg = sum(score for _, score in tfidf_ndcg_scores) / len(tfidf_ndcg_scores) if tfidf_ndcg_scores else 0
-    mean_bm25_ndcg = sum(score for _, score in bm25_ndcg_scores) / len(bm25_ndcg_scores) if bm25_ndcg_scores else 0
+    # Print comparison table
+    print_comparison_table(tfidf_ndcg_scores, bm25_ndcg_scores)
     
-    print(f"\n  RESULTS:")
-    print(f"  - Mean nDCG@10 (TF-IDF): {mean_tfidf_ndcg:.4f}")
-    print(f"  - Mean nDCG@10 (BM25):   {mean_bm25_ndcg:.4f}")
+    # Find and display a query where rankings differ
+    print("\nFinding a query where TF-IDF and BM25 rank differently")
     
-    # Find a query where they rank differently
-    print("\n[5] Finding a query where TF-IDF and BM25 rank differently...")
-    
-    differing_query = None
-    for query in query_set:
-        query_id = query['_id']
-        
+    differing_query_id = None
+    for query_id in query_set_ids:
+        if query_id not in qrels:
+            continue
+            
         tfidf_top10 = [doc_id for doc_id, _ in tfidf_results[query_id][:10]]
         bm25_top10 = [doc_id for doc_id, _ in bm25_results[query_id][:10]]
         
         if tfidf_top10 != bm25_top10:
-            differing_query = query
+            differing_query_id = query_id
             break
     
-    if differing_query:
-        query_id = differing_query['_id']
-        query_text = differing_query['text']
-        
-        print(f"\n  EXAMPLE QUERY: {query_id}")
-        print(f"  Query text: '{query_text}'")
-        
-        tfidf_top10 = tfidf_results[query_id][:10]
-        bm25_top10 = bm25_results[query_id][:10]
-        
-        print(f"\n  TF-IDF Top-10:")
-        for i, (doc_id, score) in enumerate(tfidf_top10, 1):
-            rel = qrels.get(query_id, {}).get(doc_id, 0)
-            print(f"    {i}. {doc_id} (score={score:.4f}, relevance={rel})")
-        
-        print(f"\n  BM25 Top-10:")
-        for i, (doc_id, score) in enumerate(bm25_top10, 1):
-            rel = qrels.get(query_id, {}).get(doc_id, 0)
-            print(f"    {i}. {doc_id} (score={score:.4f}, relevance={rel})")
-        
-    else:
-        print("  No query with different rankings found")
+    if differing_query_id:
+        print_divergent_query(
+            differing_query_id,
+            queries[differing_query_id],
+            tfidf_results[differing_query_id][:10],
+            bm25_results[differing_query_id][:10],
+            qrels[differing_query_id],
+            docs,
+            index,
+            doc_term_freqs,
+            doc_lengths,
+            avgdl,
+            N
+        )
