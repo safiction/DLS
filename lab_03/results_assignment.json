@@ -1,0 +1,171 @@
+{
+  "seed": 20260605,
+  "match_threshold": 0.6,
+  "tau": 0.35,
+  "n_docs": 9250,
+  "chunking": [
+    {
+      "kind": "fixed",
+      "size": 100,
+      "overlap": 0,
+      "floor": 0.2574626865671642,
+      "n_chunks": 2313
+    },
+    {
+      "kind": "fixed",
+      "size": 100,
+      "overlap": 25,
+      "floor": 0.2835820895522388,
+      "n_chunks": 2963
+    },
+    {
+      "kind": "fixed",
+      "size": 100,
+      "overlap": 50,
+      "floor": 0.31343283582089554,
+      "n_chunks": 4267
+    },
+    {
+      "kind": "fixed",
+      "size": 200,
+      "overlap": 0,
+      "floor": 0.1654228855721393,
+      "n_chunks": 1216
+    },
+    {
+      "kind": "fixed",
+      "size": 200,
+      "overlap": 25,
+      "floor": 0.17288557213930347,
+      "n_chunks": 1344
+    },
+    {
+      "kind": "fixed",
+      "size": 200,
+      "overlap": 50,
+      "floor": 0.19776119402985073,
+      "n_chunks": 1514
+    },
+    {
+      "kind": "fixed",
+      "size": 400,
+      "overlap": 0,
+      "floor": 0.11940298507462686,
+      "n_chunks": 672
+    },
+    {
+      "kind": "fixed",
+      "size": 400,
+      "overlap": 25,
+      "floor": 0.1181592039800995,
+      "n_chunks": 689
+    },
+    {
+      "kind": "fixed",
+      "size": 400,
+      "overlap": 50,
+      "floor": 0.12313432835820895,
+      "n_chunks": 717
+    },
+    {
+      "kind": "recursive",
+      "size": 100,
+      "overlap": 0,
+      "floor": 0.2848258706467662,
+      "n_chunks": 2789
+    },
+    {
+      "kind": "recursive",
+      "size": 200,
+      "overlap": 0,
+      "floor": 0.18034825870646767,
+      "n_chunks": 1394
+    },
+    {
+      "kind": "recursive",
+      "size": 400,
+      "overlap": 0,
+      "floor": 0.1318407960199005,
+      "n_chunks": 706
+    }
+  ],
+  "recall_floor": 0.31343283582089554,
+  "exhibit": {
+    "question_id": "qst_0003",
+    "fact": "Deliver a stable design JSON token spec that includes the base palette, interactive derivative tokens (for example color.interactive.primary.hover), and elevation.kappa.0-6 with explicit shadow parameters",
+    "doc_id": "dsid_3fd6af404fae48e6b8ea5a57875ef78f",
+    "size": 100,
+    "overlap": 50
+  },
+  "rewrite_table": {
+    "bm25_plain": {
+      "recall": 0.95,
+      "mrr": 0.7421666666666666,
+      "ndcg": 0.7946394630357186
+    },
+    "dense_plain": {
+      "recall": 0.7,
+      "mrr": 0.602491861732102,
+      "ndcg": 0.618853559421529
+    },
+    "multi_query": {
+      "recall": 0.65,
+      "mrr": 0.5636588357278012,
+      "ndcg": 0.5780803155822426
+    },
+    "hyde": {
+      "recall": 0.65,
+      "mrr": 0.5612643377265457,
+      "ndcg": 0.574356847033974
+    },
+    "rag_fusion": {
+      "recall": 0.75,
+      "mrr": 0.49937083973374297,
+      "ndcg": 0.5504133590584865
+    }
+  },
+  "rag_metrics_bm25_plain": {
+    "basic": {
+      "cprec": 0.6860793650793652,
+      "crec": 0.272687074829932,
+      "n": 175
+    },
+    "semantic": {
+      "cprec": 0.3864444444444445,
+      "crec": 0.1284965404965405,
+      "n": 75
+    }
+  },
+  "rag_metrics_dense_plain": {
+    "basic": {
+      "cprec": 0.46947392290249434,
+      "crec": 0.3489931972789116,
+      "n": 175
+    },
+    "semantic": {
+      "cprec": 0.2560846560846561,
+      "crec": 0.18244444444444444,
+      "n": 75
+    }
+  },
+  "judge": {
+    "position_follow_rate": 0.5,
+    "verbosity_win_rate": 0.1,
+    "swap_avg_decisive_rate": 0.06666666666666667,
+    "n_pairs": 15
+  },
+  "significance": {
+    "mean_a": 0.7416666666666666,
+    "mean_b": 0.5541666666666667,
+    "mean_diff": -0.18749999999999994,
+    "ci95": [
+      -0.40662216161330555,
+      0.03162216161330564
+    ],
+    "t_paired": -1.790973616325113,
+    "p_paired": 0.08924322616617393,
+    "wilcoxon_p": 0.11201045073823028,
+    "n": 20
+  },
+  "best_rewrite": "multi_query"
+}

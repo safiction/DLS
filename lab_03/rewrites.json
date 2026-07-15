@@ -1,0 +1,182 @@
+{
+ "qst_0001": {
+  "question": "What are the default size limits for file uploads and total request size for the new multipart upload support on the OpenAI-compatible API endpoints?",
+  "paraphrases": [
+   "Request size and limit for uploading files for Openai compatible API models?",
+   "how much data can i upload for openai compatible models if I use API?",
+   ""
+  ],
+  "hyde": "For OpenAI-compatible API endpoints, default size limit for file upload is 256 Mb, total request size should not exceed 512 tokens"
+ },
+ "qst_0002": {
+  "question": "What is the name of the new metric added so SRE can track when server-side streaming sessions get finalized due to hitting the time limit?",
+  "paraphrases": [
+   "which metric was introduced to let SRE monitor streaming sessions that were cut off by the timeout",
+   "new counter name for server side streams ended because they ran into the max duration",
+   ""
+  ],
+  "hyde": "Added a new counter metric stream_finalized_timeout_total that increments whenever a server-side streaming session is finalized because it hit the configured time limit. SRE dashboards and alerts should track this metric per region."
+ },
+ "qst_0003": {
+  "question": "What are the acceptance criteria for the project introducing an algorithm to generate interactive UI color states and a Kappa-style elevation scale for dense table and grid components?",
+  "paraphrases": [
+   "are there any criterias to accept a work with algorithm that produces UI color states and uses dense table?",
+   "which AC for complex projects can be if i want to generate Kappa-style elevation scale and have a grid?",
+   ""
+  ],
+  "hyde": "for the project introducing an algorithm to generate interactive UI color states and a Kappa-style elevation scale for dense table and grid components are beautiful style and excellent user experience"
+ },
+ "qst_0004": {
+  "question": "In the meeting about onboarding a SaaS product to Google Cloud Marketplace, what did the GCP team recommend for handling delays where a new subscription entitlement is not immediately available during the customer onboarding flow?",
+  "paraphrases": [
+   "What recommendations did the GCP team provide during the discussion regarding onboarding of a SaaS product to Google Cloud Marketplace?",
+   "suggestions from GCP team for SaaS product that was given during the meeting, where not fully available subscription is possible?",
+   "how did GCP say we should deal with entitlement propagation lag when new subs don't show up right away during signup?"
+  ],
+  "hyde": "The GCP team recommended implementing a polling-based entitlement check with a retry backoff and a fallback grace period that allows temporary access while the subscription entitlement propagates, plus surfacing a clear status message to the end user instead of blocking onboarding entirely."
+ },
+ "qst_0005": {
+  "question": "What failover sequence and recovery targets did MedThink specify for handling an EU region outage, including any limits on how long traffic can shift to the US?",
+  "paraphrases": [
+   "what's the exact failover order and RTO/RPO that MedThink laid out for EU going down, and is there a cap on US fallback duration?",
+   "MedThink's plan for EU region failure, what steps and time limits did they set for routing traffic to US?",
+   ""
+  ],
+  "hyde": "MedThink specified a two-stage sequence: first shift read traffic to US within 2 minutes, then promote US replicas to primary within 5 minutes if EU does not recover; they set a hard limit of 72 hours for traffic shift to the US, after which a mandatory data sync or manual EU recovery must be initiated."
+ },
+ "qst_0006": {
+  "question": "In the draft spec about extending a routing policy engine for automated regional failover, what is the proposed priority order for evaluating different failure signals when deciding whether to shift traffic or fail over?",
+  "paraphrases": [
+   "according to the spec draft, in what order should we rank failure signals (like latency, error rate, health checks) before flipping traffic?",
+   "which signal gets top priority in the new routing policy engine for deciding failover and what comes after?",
+   ""
+  ],
+  "hyde": "The proposed priority order is: 1) sustained 5xx error rate above 5% over 30s, 2) health check endpoint failures for 3 consecutive probes, 3) average p99 latency exceeding 3x baseline for 1 minute, and 4) custom synthetic transaction failures; lower-priority signals only trigger evaluation if higher-priority ones are not yet firing."
+ },
+ "qst_0007": {
+  "question": "In a rolling investigation of a model regression on policy-related prompts after a recent deploy, what was the average triage rubric score change between the older baseline build and the newer optimized build in the first comparison run?",
+  "paraphrases": [
+   "for the regression hunt on policy prompts, how much did the rubric score shift from old to new build in the very first comparison?",
+   "first comparison run numbers: what was the avg score difference for policy prompts after the deploy?",
+   ""
+  ],
+  "hyde": "In the first comparison run, the average triage rubric score dropped by 0.42 points (from 4.18 to 3.76 on a 5-point scale) for policy-related prompts between the older baseline build and the newer optimized build, with the largest degradation observed on prompts containing negation phrases."
+ },
+ "qst_0008": {
+  "question": "In the internal shiproom runner notes, what is the target time-to-recover threshold for a verified rollback in staging?",
+  "paraphrases": [
+   "how fast do we need to recover staging via rollback according to the internal runner notes?",
+   "what's the SLO for rollback recovery time in staging from the shiproom notes",
+   ""
+  ],
+  "hyde": "The internal shiproom runner notes specify a target time-to-recover (TTR) threshold of 8 minutes for a verified rollback in staging, measured from the moment the rollback is initiated until the health check suite passes and the rollback is marked as verified in the shiproom dashboard."
+ },
+ "qst_0009": {
+  "question": "In the EdgePath evaluation email thread, what alternative Year 1 pricing package did Redwood propose instead of matching the competitor's 50 percent first-year discount and migration credit?",
+  "paraphrases": [
+   "were there any other options suggested for year 1 pricing package as opposite of 50% discount and credit for?",
+   "instead of giving 50% off and migration credits, what did Redwood counter with for first-year pricing in the email chain?",
+   ""
+  ],
+  "hyde": "Redwood proposed an alternative Year 1 package consisting of a 35% upfront discount, a free six-month pilot for up to 5 nodes, and a $15,000 professional services credit for integration, instead of matching the competitor's 50% first-year discount and separate migration credit."
+ },
+ "qst_0010": {
+  "question": "How does the new alerting approach group model-serving requests by the stages they pass through to reduce noisy alerts and speed up root cause analysis?",
+  "paraphrases": [
+   "what's the new method where we bucket model-serving calls by stage to alert smarter?",
+   "can you explain the stage-based alert grouping for model serving? how does it reduce false positives and help debugging?",
+   ""
+  ],
+  "hyde": "The new alerting approach groups requests by stage (preprocessing, model inference, postprocessing, and response streaming), then computes per-stage error budgets and latency SLOs; alerts only fire when a specific stage violates its own threshold, while correlated stage failures produce a single aggregated alert with a stage-annotated fingerprint, which reduces noise from duplicate alerts and pinpoints the failing layer for faster RCA."
+ },
+ "qst_0011": {
+  "question": "How long is the validity period for the telemetry driven runbook author certification from the operator training bootcamp?",
+  "paraphrases": [
+   "according to operator's information, is there a period that i can use my telemetry driven runbook certificate?",
+   "how many months or years does the runbook author cert stay valid after the bootcamp?",
+   ""
+  ],
+  "hyde": "The telemetry driven runbook author certification from the operator training bootcamp is valid for 12 months from the date of issuance. Recertification requires completing a refresher module and passing a practical assessment before the expiry date."
+ },
+ "qst_0012": {
+  "question": "What was identified as the root cause of the intermittent VPN connectivity blackholes and duplicate IP warnings for users on the corporate Wi-Fi in the SF2 building behind a specific edge switch?",
+  "paraphrases": [
+   "root cause for intermittent VPN blackholes and IP conflict warnings on SF2 corporate WiFi behind the edge switch?",
+   "why did SF2 users keep losing VPN and seeing duplicate IP alerts—what did we find on that edge switch?",
+   ""
+  ],
+  "hyde": "The root cause was a misconfigured DHCP relay on the edge switch (model EX4300) that was forwarding client requests to two overlapping DHCP pools, causing duplicate IP assignments and ARP cache corruption. The blackholes occurred when the switch's MAC address table aged out incorrectly under load, dropping VPN-encapsulated packets destined for the internal 10.11.x range."
+ },
+ "qst_0013": {
+  "question": "What is the recommended two-stage process for rotating the signing credentials used by GPU image build and promotion pipelines, including how to cut over safely and roll back if something goes wrong?",
+  "paraphrases": [
+   "how should we rotate GPU image signing keys in two stages, and what's the safe cutover and rollback plan?",
+   "what's the staged approach for rotating signing credentials with minimal risk and a clear undo path?",
+   ""
+  ],
+  "hyde": "Recommended two-stage process: Stage 1 — introduce new credentials as secondary signers alongside the old ones for 7 days, verifying all pipeline stages (build, promote, deploy) can sign and verify with both. Stage 2 — promote new credentials to primary and demote old ones to secondary for 3 days, then revoke old credentials after monitoring. For cutover: update pipeline environment variables during a low-traffic window, run a canary build, and monitor signing verification errors. For rollback: re-enable old credentials as primary immediately via feature flag or environment variable revert, which takes effect within 1 pipeline cycle without rebuilding images"
+ },
+ "qst_0014": {
+  "question": "In the on-prem private upgrade deep dive with an air-gapped healthcare customer, what did they describe as their current rollback approach when an upgrade goes wrong?",
+  "paraphrases": [
+   "in case of incorrect upgrade, what is the strategt on rollback for air-gapped healthcare customers in on-prem private upgrade deep dive?",
+   "how does that healthcare customer with no internet access handle rollbacks when their private upgrade fails?",
+   ""
+  ],
+  "hyde": "The customer described a full VM snapshot revert approach: they take a snapshot of the entire application VM before any upgrade, then if upgrade fails, they power off the VM, revert to the snapshot, and reboot — which takes about 15–20 minutes. They also keep a parallel standby VM running the previous version that they can switch DNS to within 5 minutes as a faster fallback, though this requires manual validation of data consistency between the two VMs"
+ },
+ "qst_0015": {
+  "question": "What was the high-percentile latency concern reported after a smoke test of about 50 concurrent streaming chat sessions for Satellite Grove?",
+  "paraphrases": [
+   "what p99 or p95 latency issue came up in the Satellite Grove 50-session streaming smoke test?",
+   "after running 50 concurrent chat streams for Satellite Grove, what high-latency red flag did we see?",
+   ""
+  ],
+  "hyde": "The smoke test revealed that p99 latency spiked to 4,200ms for the first token generation (compared to 1,200ms baseline), and p95 response completion latency reached 8.7 seconds versus 2.3 seconds baseline. The concern was that this would violate the 5-second p95 SLO for Satellite Grove's interactive chat workload, likely due to GPU context switching overhead at moderate concurrency"
+ },
+ "qst_0016": {
+  "question": "What is the company policy for how long contractor access should last by default before it expires, according to the access and permissions playbook?",
+  "paraphrases": [
+   "how long does contractor access stay active by default before expiring",
+   "default expiration window for contractor accounts in the permissions playbook",
+   ""
+  ],
+  "hyde": "Per the access and permissions playbook, contractor access is provisioned with a default expiry of 90 days. Extensions require manager re-approval through the access request workflow before the expiration date."
+ },
+ "qst_0017": {
+  "question": "What service credit percentages were proposed in the tiered uptime SLA counteroffer for the maritime logistics SaaS customer using dedicated GPU capacity?",
+  "paraphrases": [
+   "what credit tiers did we offer in the SLA counterproposal for the maritime logistics customer with dedicated GPUs?",
+   "what percentage of service credits per uptime tier did we counteroffer to the maritime logistics SaaS deal?",
+   ""
+  ],
+  "hyde": "The proposed tiered uptime SLA counteroffer was: 99.9% uptime — 5% service credit; 99.5% uptime — 15% credit; 99.0% uptime — 30% credit; below 99.0% — 50% credit for the month. These percentages were doubled for any incident exceeding 60 minutes of continuous downtime, applicable to dedicated GPU capacity only, not to shared pool usage."
+ },
+ "qst_0018": {
+  "question": "In the incident writeup about KV cache ghost entries causing gradual memory growth and OOM during a surge, what metric name was added for counting when the sanitizer finds negative refcounts?",
+  "paraphrases": [
+   "what's the new metric for negative refcounts detected by the sanitizer in the KV cache OOM incident?",
+   "name of the metric that increments when the cache sanitizer spots negative reference counts?",
+   ""
+  ],
+  "hyde": "Added a counter metric named kv_cache_negative_refcount_detected_total that increments each time the sanitizer identifies a negative refcount during the background cache sweep. This metric is labeled by cache shard and eviction policy, and an alert is configured to fire if the rate exceeds 1 per minute over a 5-minute window."
+ },
+ "qst_0019": {
+  "question": "After a recent network change at the SoMa office, users on corporate WiFi saw VPN access to an internal 10.11.x service fail and SSO logins time out because an office bridge was translating client addresses. What device mode misconfiguration caused the source IP rewrite?",
+  "paraphrases": [
+   "why source API was rewritten after different network at SoMa office for those who use corporate WiFi?",
+   "what can be the cause of poor working corporate WiFi in SoMa office? my SSO login expires, and I can't access the service",
+   ""
+  ],
+  "hyde": "The office bridge (a Meraki MX appliance) was misconfigured in 'NAT mode' instead of 'bridge mode' on the corporate WiFi SSID, which caused it to perform source NAT on all client traffic, rewriting the original 10.x client IPs to the bridge's own 192.168.1.x address. This broke VPN because the VPN gateway expected client IPs to be within the corporate subnet for ACL evaluation, and SSO timed out because the IP-based session affinity cookies were mismatched, causing authentication requests to be rejected as coming from an untrusted source."
+ },
+ "qst_0020": {
+  "question": "In the recent update to the chat completions compatibility adapter, how does the parameter normalizer handle a client sending max_tokens as null compared to leaving it out entirely?",
+  "paraphrases": [
+   "what's the difference in how the adapter normalizer treats null max_tokens vs missing max_tokens?",
+   "how does the parameter normalizer distinguish between max_tokens=null and no max_tokens field in chat completions requests?",
+   ""
+  ],
+  "hyde": "The parameter normalizer treats explicit null differently from omission: if max_tokens is omitted entirely, the normalizer uses the model's default max_tokens (typically 4096 for most models). If max_tokens is explicitly set to null, the normalizer interprets this as 'unlimited' and sets the value to the maximum allowed by the model's context window minus reserved prompt tokens, but it also logs a warning and defaults to the model's maximum safe value (e.g., 8192). For backward compatibility, both behaviors preserve the original request object in a metadata field for debugging."
+ }
+}

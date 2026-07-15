@@ -1,0 +1,136 @@
+{
+  "seed": 20260605,
+  "slice": "confluence",
+  "n_docs": 5030,
+  "n_questions": 30,
+  "ivf": {
+    "nlist": 71,
+    "sweep": [
+      {
+        "nprobe": 1,
+        "recall": 0.4133333333333333,
+        "frac_scanned": 0.013174287607687213
+      },
+      {
+        "nprobe": 2,
+        "recall": 0.5666666666666667,
+        "frac_scanned": 0.025553346587143803
+      },
+      {
+        "nprobe": 4,
+        "recall": 0.7200000000000001,
+        "frac_scanned": 0.05133200795228628
+      },
+      {
+        "nprobe": 8,
+        "recall": 0.8433333333333333,
+        "frac_scanned": 0.1078860172299536
+      },
+      {
+        "nprobe": 16,
+        "recall": 0.9333333333333332,
+        "frac_scanned": 0.21868787276341944
+      },
+      {
+        "nprobe": 71,
+        "recall": 1.0,
+        "frac_scanned": 1.0
+      }
+    ],
+    "knee_nprobe": 16
+  },
+  "boundary_example": {
+    "question_id": "qst_0001",
+    "doc_id": "dsid_6fbf85a895c2499f9e95699caa4b170c",
+    "exact_rank": 6,
+    "cell_rank": 2,
+    "margin": 0.029931187629699707
+  },
+  "pq": {
+    "m": 8,
+    "k": 256,
+    "bytes_per_vec": 8.0,
+    "recall_raw": 0.39,
+    "recall_rerank": 0.8733333333333333
+  },
+  "mk_sweep": [
+    {
+      "m": 4,
+      "k": 16,
+      "bytes": 2.0,
+      "recall_raw": 0.06000000000000002,
+      "recall_rerank": 0.3766666666666667
+    },
+    {
+      "m": 4,
+      "k": 256,
+      "bytes": 4.0,
+      "recall_raw": 0.3266666666666666,
+      "recall_rerank": 0.8033333333333335
+    },
+    {
+      "m": 8,
+      "k": 16,
+      "bytes": 4.0,
+      "recall_raw": 0.12000000000000002,
+      "recall_rerank": 0.47666666666666674
+    },
+    {
+      "m": 8,
+      "k": 256,
+      "bytes": 8.0,
+      "recall_raw": 0.39,
+      "recall_rerank": 0.8733333333333333
+    },
+    {
+      "m": 16,
+      "k": 16,
+      "bytes": 8.0,
+      "recall_raw": 0.22333333333333336,
+      "recall_rerank": 0.6799999999999999
+    },
+    {
+      "m": 16,
+      "k": 256,
+      "bytes": 16.0,
+      "recall_raw": 0.4966666666666667,
+      "recall_rerank": 0.9499999999999998
+    }
+  ],
+  "ivfpq": {
+    "nprobe": 16,
+    "recall": 0.8466666666666668,
+    "frac_scanned": 0.21868787276341944,
+    "bytes_per_vec": 8.0
+  },
+  "tradeoff_table": [
+    {
+      "index": "exact",
+      "recall": 1.0,
+      "frac_scanned": 1.0,
+      "bytes_per_vec": 1536,
+      "compression": 1.0
+    },
+    {
+      "index": "IVF@knee (nprobe=16)",
+      "recall": 0.9333333333333332,
+      "frac_scanned": 0.21868787276341944,
+      "bytes_per_vec": 1536,
+      "compression": 1.0
+    },
+    {
+      "index": "PQ(8,256)+re-rank",
+      "recall": 0.8733333333333333,
+      "frac_scanned": 1.0,
+      "bytes_per_vec": 8.0,
+      "compression": 192.0
+    },
+    {
+      "index": "IVF-PQ+re-rank",
+      "recall": 0.8466666666666668,
+      "frac_scanned": 0.21868787276341944,
+      "bytes_per_vec": 8.0,
+      "compression": 192.0
+    }
+  ]
+}
